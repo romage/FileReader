@@ -23,12 +23,23 @@ namespace FileReader.Core.Services
             _constr = config.DefaultConnectionString;
             _logger = logger;
         }
+
+        private string getSchema()
+        {
+            var ds = "dbo";
+            var configschema = _config.DefaultSchema;
+            if (!string.IsNullOrEmpty(configschema))
+            {
+                ds = configschema.TrimStart('[').TrimEnd(']');
+            }
+            return $"[{ds}].";
+        }
         public string CreateEmptyTableText(string tableName, List<Column> columns)
         {
             var sql = new StringBuilder();
             //sql.Append("Create alias import.dbo.{tablename}")
             sql.Append("SET DATEFORMAT DMY;");
-            sql.Append($"CREATE TABLE [dbo].[{tableName}](");
+            sql.Append($"CREATE TABLE {getSchema()}[{tableName}](");
             var max = columns.Max(e => e.OrdinalPosition);
             foreach (var c in columns.OrderBy(e => e.OrdinalPosition))
             {
@@ -54,7 +65,7 @@ namespace FileReader.Core.Services
         public string PopulateTableString(string tableName, string sourcePath)
         {
             return $@"SET DATEFORMAT DMY;
-                       BULK INSERT {tableName}
+                       BULK INSERT {getSchema()}[{tableName}]
 					   FROM '{sourcePath}'
 					   WITH
 						 (

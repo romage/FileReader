@@ -13,5 +13,6 @@ namespace FileReader.Core.Interfaces
         string FileNameCleanerRegex { get; }
         int SampleSize { get; }
         string DefaultConnectionString  { get; }
+        string DefaultSchema { get; }
     }
 }

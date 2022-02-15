@@ -26,5 +26,7 @@ namespace FileReader.Core.Services
         public int SampleSize => _config.GetValue<int>("SampleSize");
 
         public string DefaultConnectionString => _config.GetConnectionString("Default");
+
+        public string DefaultSchema => _config.GetConnectionString("DefaultSchema");
     }
 }

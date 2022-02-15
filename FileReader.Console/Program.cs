@@ -110,12 +110,20 @@ void Option2()
 {
     Console.Clear();
     var files = fs.GetFiles(config.FolderPath);
+    
     Console.WriteLine($"The folder path is currently set to: >> {config.FolderPath} <<.");
     if (!string.IsNullOrWhiteSpace(config.FileFilter)) Console.WriteLine($"There is a filter of: >>  {config.FileFilter} <<.");
     if (!string.IsNullOrWhiteSpace(config.FileNameCleanerRegex)) Console.WriteLine($"There is a file cleaner regex of : >>  {config.FileNameCleanerRegex} <<.");
 
-    Console.Write(files.ToStringTable(new[] { "File name,", "Extension", "Size", "Table name" }, f => f.Name, f=> f.Extension, f=>f.Length, f=>fs.GetTableName(f.Name)));
- 
+    if (files.Count() == 0)
+    {
+        Console.WriteLine("There are no files in this path that match the filters");
+    }
+    else
+    { 
+        Console.Write(files.ToStringTable(new[] { "File name,", "Extension", "Size", "Table name" }, f => f.Name, f=> f.Extension, f=>f.Length, f=>fs.GetTableName(f.Name)));
+    }
+
     ClickToContinue();
 }
 

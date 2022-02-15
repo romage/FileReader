@@ -146,7 +146,7 @@ void Option4()
         Console.WriteLine($"Filename: { fn }");
         Console.WriteLine($"Tablename: { tn }");
 
-        Console.WriteLine($"Table schema: { ds.CreateEmptyTableText(tn, cols) }");
+        Console.WriteLine("Table schema:");
         Console.WriteLine( ds.CreateEmptyTableText(tn, cols) );
     }
     ClickToContinue();

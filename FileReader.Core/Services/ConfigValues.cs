@@ -27,6 +27,8 @@ namespace FileReader.Core.Services
 
         public string DefaultConnectionString => _config.GetConnectionString("Default");
 
-        public string DefaultSchema => _config.GetConnectionString("DefaultSchema");
+        public string DefaultSchema => _config.GetValue<string>("DefaultSchema");
+
+        public string SqlPreface => _config.GetValue<string>("SqlPreface");
     }
 }

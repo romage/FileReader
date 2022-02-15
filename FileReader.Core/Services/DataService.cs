@@ -34,19 +34,31 @@ namespace FileReader.Core.Services
             }
             return $"[{ds}].";
         }
+        private string getPreface()
+        {
+            
+            var configpr = _config.SqlPreface;
+            if (!string.IsNullOrEmpty(configpr))
+            {
+                return $"{configpr.TrimEnd().TrimEnd(';')};";
+            }
+            return string.Empty;
+        }
+
         public string CreateEmptyTableText(string tableName, List<Column> columns)
         {
             var sql = new StringBuilder();
             //sql.Append("Create alias import.dbo.{tablename}")
-            sql.Append("SET DATEFORMAT DMY;");
-            sql.Append($"CREATE TABLE {getSchema()}[{tableName}](");
+            
+            sql.AppendLine(getPreface());
+            sql.AppendLine($"CREATE TABLE {getSchema()}[{tableName}](");
             var max = columns.Max(e => e.OrdinalPosition);
             foreach (var c in columns.OrderBy(e => e.OrdinalPosition))
             {
-                sql.Append(GetColumnString(c, c.OrdinalPosition == max));
+                sql.AppendLine(GetColumnString(c, c.OrdinalPosition == max));
             }
 
-            sql.Append(")");
+            sql.AppendLine(")");
 
             return sql.ToString();
         }
@@ -64,7 +76,7 @@ namespace FileReader.Core.Services
 
         public string PopulateTableString(string tableName, string sourcePath)
         {
-            return $@"SET DATEFORMAT DMY;
+            return $@"{getPreface()}
                        BULK INSERT {getSchema()}[{tableName}]
 					   FROM '{sourcePath}'
 					   WITH

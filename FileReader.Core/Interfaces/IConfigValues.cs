@@ -14,5 +14,6 @@ namespace FileReader.Core.Interfaces
         int SampleSize { get; }
         string DefaultConnectionString  { get; }
         string DefaultSchema { get; }
+        string SqlPreface { get;  }
     }
 }

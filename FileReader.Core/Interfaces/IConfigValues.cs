@@ -15,5 +15,6 @@ namespace FileReader.Core.Interfaces
         string DefaultConnectionString  { get; }
         string DefaultSchema { get; }
         string SqlPreface { get;  }
+        decimal StringLengthPaddingMultiplyer { get; }
     }
 }

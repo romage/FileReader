@@ -17,6 +17,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
             .AddTransient<IConfigValues, ConfigValues>()
             .AddTransient<IFileService, FileService>()
             .AddTransient<IDataService, DataService>()
+            .AddTransient<ITypeProcessingService, TypeProcessingService>()
             )
     .ConfigureLogging((_, logging) =>
             {

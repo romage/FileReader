@@ -30,5 +30,7 @@ namespace FileReader.Core.Services
         public string DefaultSchema => _config.GetValue<string>("DefaultSchema");
 
         public string SqlPreface => _config.GetValue<string>("SqlPreface");
+
+        public decimal StringLengthPaddingMultiplyer => _config.GetValue<decimal>("StringLengthPaddingMultiplyer");
     }
 }

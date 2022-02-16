@@ -19,22 +19,27 @@ namespace FileReader.Core.Services
         List<Column> columns = null!;
         private readonly ILogger<FileService> _logger = null!;
         private readonly IConfigValues _config;
+        private readonly ITypeProcessingService _typeProcessingService;
 
-        public FileService(IConfigValues config, ILogger<FileService> logger)
+        public FileService(ITypeProcessingService typeProcessingService, IConfigValues config, ILogger<FileService> logger)
         {
             _config = config;
             _logger = logger;
+            _typeProcessingService = typeProcessingService;
         }
 
         public List<Column> GetColumsMetaData(string path, int sampleSize = 50)
         {
             columns =  new List<Column>();
 
-            using System.IO.StreamReader readingFile = new System.IO.StreamReader(path);
+            using StreamReader readingFile = new StreamReader(path);
 
             string readingLine = readingFile.ReadLine();
 
             var columnsHeaders = readingLine.Split('|');
+
+            var stringLengthPaddingMultiplyer = _config.StringLengthPaddingMultiplyer;
+
 
             for (var i = 0; i < columnsHeaders.Count(); i++)
             {
@@ -42,7 +47,7 @@ namespace FileReader.Core.Services
                 columns.Add(c);
             }
 
-            for (var i = 0; i< sampleSize; i++)
+            for (var i = 0; i < sampleSize; i++)
             {
                 ProcessLine(readingFile);
             }
@@ -51,12 +56,14 @@ namespace FileReader.Core.Services
             {
                 if (col.HeadingDataType == HeadingDataType.String)
                 {
-                    col.MaxLength = col.MaxLength * 3;
+
+                    col.MaxLength = (int) (Math.Round(col.MaxLength * stringLengthPaddingMultiplyer));
                 }
             }
 
+            readingFile.Dispose();
+            
             return columns;
-
 
         }
 
@@ -73,62 +80,8 @@ namespace FileReader.Core.Services
             for (var i = 0; i < columns.Count; i++)
             {
                 var col = columns.Single(e => e.OrdinalPosition ==i);
-
                 var p = line[i];
-
-
-                var isBool = bool.TryParse(p, out var isb);
-                if (isBool && p!="True" &&p!="False") continue;
-
-                var isDate = DateTime.TryParse(p, out var isda);
-                if (isDate)
-                {
-                    if (col.HeadingDataType >= HeadingDataType.DateTime) continue;
-
-                    col.HeadingDataType = HeadingDataType.DateTime;
-                    //col.MaxLength = 20;
-                    continue;
-                }
-
-                var isInt = int.TryParse(p, out var isi);
-                if (isInt)
-                {
-                    if (col.HeadingDataType >= HeadingDataType.Int) continue;
-
-                    col.HeadingDataType = HeadingDataType.Int;
-                    continue;
-                }
-
-                var isBigInt = Int64.TryParse(p, out var isBig);
-                if (isBigInt)
-                {
-                    if (col.HeadingDataType >= HeadingDataType.BigInt) continue;
-
-                    col.HeadingDataType = HeadingDataType.BigInt;
-                    continue;
-                }
-
-                var isDecimal = decimal.TryParse(p, out var isdc);
-                if (isDecimal)
-                {
-                    if (col.HeadingDataType >= HeadingDataType.Decimal) continue;
-                    col.HeadingDataType = HeadingDataType.Decimal;
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(p))
-                {
-                    if (!col.IsNullable) col.IsNullable = true;
-                    continue;
-                }
-
-
-                var stringLen = p.Length + 5;
-                if (stringLen > col.MaxLength)
-                {
-                    col.HeadingDataType = HeadingDataType.String;
-                    col.MaxLength = stringLen;
-                }
+                _typeProcessingService.UpdateColumn(p, col);
             }
 
         }

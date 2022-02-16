@@ -16,12 +16,15 @@ namespace FileReader.Core.Services
         string _constr;
         private readonly ILogger<DataService> _logger;
         private readonly IConfigValues _config;
+        private readonly ITypeProcessingService _typeProcessingService;
 
-        public DataService(IConfigValues config, ILogger<DataService> logger)
+        public DataService(ITypeProcessingService typeProcessingService, IConfigValues config, ILogger<DataService> logger)
         {
             _config = config;
             _constr = config.DefaultConnectionString;
             _logger = logger;
+            _typeProcessingService = typeProcessingService;
+
         }
 
         private string getSchema()
@@ -85,6 +88,7 @@ namespace FileReader.Core.Services
 							 , FIELDTERMINATOR ='|'
 							 , ROWTERMINATOR = '\n'
 							 , DATAFILETYPE = 'CHAR'
+                             , CODEPAGE = 1252
 						  );";
 
         }
@@ -124,7 +128,7 @@ namespace FileReader.Core.Services
                     sqlDataType = "Float";
                     break;
                 default:
-                    sqlDataType = $"Nvarchar({strlen})";
+                    sqlDataType = $"Varchar({strlen})";
                     break;
             }
             var moreColumns = lastColumn ? "" : ",";

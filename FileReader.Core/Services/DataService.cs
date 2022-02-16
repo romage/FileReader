@@ -127,14 +127,27 @@ namespace FileReader.Core.Services
                 case HeadingDataType.Decimal:
                     sqlDataType = "Float";
                     break;
+                case HeadingDataType.String:
+                    sqlDataType = $"NVarchar({strlen})";
+                    break;
                 default:
-                    sqlDataType = $"Varchar({strlen})";
+                    sqlDataType = GetDefaultColumnTypeForUnknown(col);
                     break;
             }
             var moreColumns = lastColumn ? "" : ",";
 
 
-            return $"[{col.Title}] {sqlDataType} { nullable } {moreColumns}";
+            return $"[{col.Title}] {sqlDataType} { nullable }{moreColumns}";
+        }
+
+        private string GetDefaultColumnTypeForUnknown(Column col)
+        {
+            if (col.Title.TrimEnd().ToLower().EndsWith("id"))
+            {
+                return "bigint";
+            }
+
+            return "NVarchar(10)";
         }
     }
 }

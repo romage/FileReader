@@ -16,5 +16,12 @@ namespace FileReader.Core.Interfaces
         string DefaultSchema { get; }
         string SqlPreface { get;  }
         decimal StringLengthPaddingMultiplyer { get; }
+
+        string Codepage { get; }
+        string DataFileType { get; }
+        string FieldTerminator { get; }
+        string RowTerminator { get; }
+
+       
     }
 }

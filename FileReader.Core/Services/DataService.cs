@@ -83,10 +83,10 @@ namespace FileReader.Core.Services
 					   WITH
 						 (
 							 FIRSTROW=2
-							 , FIELDTERMINATOR ='|'
-							 , ROWTERMINATOR = '\n'
-							 , DATAFILETYPE = 'CHAR'
-                             , CODEPAGE = 1252
+							 , FIELDTERMINATOR ='{_config.FieldTerminator}'
+							 , ROWTERMINATOR = '{_config.RowTerminator}'
+							 , DATAFILETYPE = '{_config.DataFileType}'
+                             , CODEPAGE = {_config.Codepage}
 						  );";
 
         }

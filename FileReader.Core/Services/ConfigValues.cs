@@ -32,5 +32,12 @@ namespace FileReader.Core.Services
         public string SqlPreface => _config.GetValue<string>("SqlPreface");
 
         public decimal StringLengthPaddingMultiplyer => _config.GetValue<decimal>("StringLengthPaddingMultiplyer");
+
+        public string Codepage => _config.GetSection("BulkInsertOptions").GetValue<string>("Codepage");
+        public string DataFileType => _config.GetSection("BulkInsertOptions").GetValue<string>("DataFileType");
+        public string FieldTerminator => _config.GetSection("BulkInsertOptions").GetValue<string>("FieldTerminator");
+        public string RowTerminator => _config.GetSection("BulkInsertOptions").GetValue<string>("RowTerminator");
+
+
     }
 }

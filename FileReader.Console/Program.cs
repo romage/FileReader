@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Text;
 
 IConfiguration baseConfig = new ConfigurationBuilder()
                         .AddJsonFile("appSettings.json")
@@ -31,32 +33,94 @@ IConfigValues config = host.Services.GetRequiredService<IConfigValues>();
 IFileService fs = host.Services.GetRequiredService<IFileService>();
 IDataService ds = host.Services.GetRequiredService<IDataService>();
 
-int menuSelectedIndex = 0;
+//int mainMenuSelectedIndex = -1;
+//int profileMenuSelectedIndex = -1;
+int selectedMenuIndex = 0;
 bool initialLoad = true;
 
-List<Option> options = new List<Option>();
-options.Add(new Option(1, "[1] Check the configured path location", Option1));
-options.Add(new Option(2, "[2] See files in your configured path.", Option2));
-options.Add(new Option(3, "[3] Check connection string.", Option3));
-options.Add(new Option(4, "[4] Get the SQL script to generate tables. This just generates the script, and does not alter the db.", Option4));
-options.Add(new Option(5, "[5] Run table schema script. This alters the db, so be careful.", Option5) );
-options.Add(new Option(6, "[6] Generate script to populate table data. This just generates the script, and does not alter the db.", Option6));
-options.Add(new Option(7, "[7] Populate table data. This alters the db, so be careful.", Option7));
-options.Add(new Option(8, "[8] Create the schema and populate the data (5+7). This alters the db, so be careful.", Option8));
-options.Add(new Option(9, "[9] Quit", Bye));
+List<Option> mainOptions = new List<Option>();
+List<Option> profileOptions = new List<Option>();
 
+mainOptions.Add(new Option(0, "[0] Create and use profile settings", Option0 ));
+mainOptions.Add(new Option(1, "[1] Check the configured path location", Option1));
+mainOptions.Add(new Option(2, "[2] See files in your configured path.", Option2));
+mainOptions.Add(new Option(3, "[3] Check connection string.", Option3));
+mainOptions.Add(new Option(4, "[4] Get the SQL script to generate tables. This just generates the script, and does not alter the db.", Option4));
+mainOptions.Add(new Option(5, "[5] Run table schema script. This alters the db, so be careful.", Option5) );
+mainOptions.Add(new Option(6, "[6] Generate script to populate table data. This just generates the script, and does not alter the db.", Option6));
+mainOptions.Add(new Option(7, "[7] Populate table data. This alters the db, so be careful.", Option7));
+mainOptions.Add(new Option(8, "[8] Create the schema and populate the data (5+7). This alters the db, so be careful.", Option8));
+mainOptions.Add(new Option(9, "[9] Quit", Bye));
+
+profileOptions.Add(new Option(0, "[0] Back to main menu", LoadMainMenu));
+profileOptions.Add(new Option(1, "[1] Create new Profile", CreateProfile));
 
 
 void InitialIntro()
 {
-    Console.WriteLine("------------------------------------------------");
-    Console.WriteLine();
-    Console.WriteLine("This is a really basic program to help create sql script and import data. This was done quickly, and has not been tested exensively. ");
-    Console.WriteLine("It would be good to get better type parsing. In particular, I'm unhappy with float/decimal/money option. Although I also don't look at varchar vs nvarchar. I don't look at tinyint.");
-    Console.WriteLine("There are parts of the script that I've made ugly changes as the flat files that I'm working on have are just nasty.");
-    Console.WriteLine();
-    Console.WriteLine("------------------------------------------------");
+    if (initialLoad)
+    {
+        Console.WriteLine("------------------------------------------------");
+        Console.WriteLine();
+        Console.WriteLine("This is a really basic program to help create sql script and import data. This was done quickly, and has not been tested exensively. ");
+        Console.WriteLine("It would be good to get better type parsing. In particular, I'm unhappy with float/decimal/money option. Although I also don't look at varchar vs nvarchar. I don't look at tinyint.");
+        Console.WriteLine("There are parts of the script that I've made ugly changes as the flat files that I'm working on have are just nasty.");
+        Console.WriteLine();
+        Console.WriteLine("------------------------------------------------");
+    }
+    else
+    {
+        Console.WriteLine("------------------------------------------------");
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"loaded profile: {config.ProfileName}");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine("------------------------------------------------");
+    }
 
+}
+
+void CreateProfile()
+{
+    Console.Clear();
+    InitialIntro();
+    Console.WriteLine("What would you like to call the new profile?");
+    var newProfileName = Console.ReadLine();
+    if (string.IsNullOrEmpty(newProfileName))
+    {
+        Console.WriteLine("You need to enter the name for a new profile. try again.... ");
+        Thread.Sleep(2000);
+        CreateProfile();
+    }
+    else
+    {
+        config.CopySettingsProfileTo(newProfileName);
+        Console.WriteLine("new profile has been created with a copy of the current settings");
+        // clear current profile options otherwise these will duplication each time this is run.
+        WriteProfileMenu();
+    }
+}
+
+void WriteProfileMenu()
+{
+    profileOptions.RemoveAll(e => e.Id >1);
+    var profiles = config.GetProfiles();
+    for (var i = 2; i < profiles.Count()+2; i++)
+    {
+        string profileName = profiles[i-2];
+        profileOptions.Add(new Option(i, $"[{i}] load profile {profileName}", () => config.LoadSettingsProfile(name: profileName)));
+    }
+    WriteMenu(profileOptions, profileOptions[selectedMenuIndex]);
+    GetMainInteraction(profileOptions);
+}
+
+void Option0()
+{
+    selectedMenuIndex = 0;
+    WriteProfileMenu();
 }
 
 void Option1()
@@ -92,16 +156,15 @@ void Option2()
 void Option3()
 {
     Console.Clear();
-    //Console.BackgroundColor = ConsoleColor.Cyan;
-    //Console.ForegroundColor = ConsoleColor.Black;
-    Console.WriteLine($"The connection string is set to: >> {config.DefaultConnectionString} <<.");
-    //Console.ResetColor();
+    Console.WriteLine($"The connection string is set to: >>");
+    Console.WriteLine($"{config.DefaultConnectionString}");
     ClickToContinue();
 }
 
 void Option4()
 {
     Console.Clear();
+    StringBuilder sb = new StringBuilder();
     var files = fs.GetFiles(config.FolderPath);
     foreach (var file in files)
     {
@@ -111,14 +174,17 @@ void Option4()
         var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
         if (config.SampleSize>0)
         {
-            Console.WriteLine($"The sample size is configured to review {config.SampleSize} rows");
+            Console.WriteLine($"The sample size is configured to review >> {config.SampleSize} rows");
         }
-        Console.WriteLine($"Filename: { fn }");
-        Console.WriteLine($"Tablename: { tn }");
+        Console.WriteLine($"Filename >> { fn }");
+        Console.WriteLine($"Tablename >> { tn }");
 
-        Console.WriteLine("Table schema:");
-        Console.WriteLine( ds.CreateEmptyTableText(tn, cols) );
+        Console.WriteLine("Table schema >>");
+        var outputText = ds.CreateEmptyTableText(tn, cols);
+        sb.AppendLine(outputText);
+        Console.WriteLine( outputText);
     }
+    SetText(sb.ToString());
     ClickToContinue();
 }
 
@@ -133,8 +199,8 @@ void Option5()
         var tn = fs.GetTableName(fn);
         var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
         WriteSeparater();
-        Console.WriteLine($"Filename: { fn }");
-        Console.WriteLine($"Tablename: { tn }");
+        Console.WriteLine($"Filename>> { fn }");
+        Console.WriteLine($"Tablename>> { tn }");
 
         ds.CreateEmptyTable(tn, cols);
 
@@ -194,7 +260,7 @@ void Option8()
     var files = fs.GetFiles(config.FolderPath);
     foreach (var file in files)
     {
-        WriteSeparater();
+        Console.WriteLine("...");
         var fn = file.Name;
         var tn = fs.GetTableName(fn);
         var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
@@ -221,8 +287,8 @@ void ClickToContinue()
     WriteSeparater();
     Console.WriteLine("Press enter to return to the menu.");
     Console.ReadLine();
-    WriteMenu(options[menuSelectedIndex]);
-    GetInteraction();
+    WriteMenu(mainOptions, mainOptions[selectedMenuIndex]);
+    GetMainInteraction(mainOptions);
 }
 
 void Bye()
@@ -236,7 +302,7 @@ void Bye()
 
 
 
-void GetInteraction()
+void GetMainInteraction(List<Option> options)
 {
     ConsoleKeyInfo keyinfo;
     do
@@ -244,51 +310,53 @@ void GetInteraction()
         keyinfo = Console.ReadKey();
         if (keyinfo.Key == ConsoleKey.DownArrow)
         {
-            if (menuSelectedIndex + 1 < options.Count)
+            if (selectedMenuIndex + 1 < options.Count)
             {
-                menuSelectedIndex++;
-                WriteMenu(options[menuSelectedIndex]);
+                selectedMenuIndex++;
+                WriteMenu(options, options[selectedMenuIndex]);
             }
         }
 
         if (keyinfo.Key == ConsoleKey.UpArrow)
         {
-            if (menuSelectedIndex - 1 >= 0)
+            if (selectedMenuIndex - 1 >= 0)
             {
-                menuSelectedIndex--;
-                WriteMenu(options[menuSelectedIndex]);
+                selectedMenuIndex--;
+                WriteMenu(options, options[selectedMenuIndex]);
             }
         }
 
         // Handle different action for the option
         if (keyinfo.Key == ConsoleKey.Enter)
         {
-            options[menuSelectedIndex].Selected.Invoke();
-            menuSelectedIndex = 0;
+            options[selectedMenuIndex].Selected.Invoke();
+            selectedMenuIndex = 0;
         }
 
-        if (Int32.TryParse(keyinfo.KeyChar.ToString(), out var number))
-        {
-            if (options.Select(e => e.Id).Contains(number))
-            {
-                menuSelectedIndex = number-1;//0 based index
-                options.First(e => e.Id == number).Selected.Invoke();
-            }
-        }
+        //if (Int32.TryParse(keyinfo.KeyChar.ToString(), out var number))
+        //{
+        //    if (options.Select(e => e.Id).Contains(number))
+        //    {
+        //        selectedMenuIndex = number-1;//0 based index
+        //        options.First(e => e.Id == number).Selected.Invoke();
+        //    }
+        //}
 
         
     } while (keyinfo.Key != ConsoleKey.X) ;
-
 }
 
 
 
-void WriteMenu(Option selectedOption)
+void WriteMenu(List<Option> options, Option selectedOption)
 {
     Console.Clear();
+    InitialIntro();
 
-    if(initialLoad) InitialIntro();
-
+    if (initialLoad)
+    { 
+        initialLoad = false;
+    }
 
     Console.WriteLine("Please select ... ");
 
@@ -308,13 +376,29 @@ void WriteMenu(Option selectedOption)
 }
 
 
+void LoadMainMenu()
+{
+    selectedMenuIndex = 0;
+    WriteMenu(mainOptions, mainOptions[selectedMenuIndex]);
+    GetMainInteraction(mainOptions);
+}
+
+LoadMainMenu();
 
 
-
-WriteMenu(options[menuSelectedIndex]);
-GetInteraction();
-
-
+void SetText(string text)
+{
+    var powershell = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            FileName = "powershell",
+            Arguments = $"-command \"Set-Clipboard -Value \\\"{text}\\\"\""
+        }
+    };
+    powershell.Start();
+    powershell.WaitForExit();
+}
 
 readonly record struct Option(int Id, string Name, Action Selected)
 {

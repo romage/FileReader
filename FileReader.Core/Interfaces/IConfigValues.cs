@@ -8,20 +8,23 @@ namespace FileReader.Core.Interfaces
 {
     public  interface IConfigValues
     {
-        string FolderPath { get; }
-        string FileFilter { get; }
-        string FileNameCleanerRegex { get; }
-        int SampleSize { get; }
-        string DefaultConnectionString  { get; }
-        string DefaultSchema { get; }
-        string SqlPreface { get;  }
-        decimal StringLengthPaddingMultiplyer { get; }
+        string ProfileName { get; set; }
+        string FolderPath {  get; set; }
+        string FileFilter {  get; set; }
+        string FileNameCleanerRegex {  get; set; }
+        int SampleSize {  get; set; }
+        string DefaultConnectionString  {  get; set; }
+        string DefaultSchema {  get; set; }
+        string SqlPreface {  get; set;  }
+        decimal StringLengthPaddingMultiplyer {  get; set; }
+        string Codepage {  get; set; }
+        string DataFileType {  get; set; }
+        string FieldTerminator {  get; set; }
+        string RowTerminator {  get; set; }
 
-        string Codepage { get; }
-        string DataFileType { get; }
-        string FieldTerminator { get; }
-        string RowTerminator { get; }
+        void CopySettingsProfileTo(string name);
+        List<string> GetProfiles();
+        void LoadSettingsProfile(string name);
 
-       
     }
 }

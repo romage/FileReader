@@ -31,6 +31,20 @@ IConfigValues config = host.Services.GetRequiredService<IConfigValues>();
 IFileService fs = host.Services.GetRequiredService<IFileService>();
 IDataService ds = host.Services.GetRequiredService<IDataService>();
 
+int menuSelectedIndex = 0;
+bool initialLoad = true;
+
+List<Option> options = new List<Option>();
+options.Add(new Option(1, "[1] Check the configured path location", Option1));
+options.Add(new Option(2, "[2] See files in your configured path.", Option2));
+options.Add(new Option(3, "[3] Check connection string.", Option3));
+options.Add(new Option(4, "[4] Get the SQL script to generate tables. This just generates the script, and does not alter the db.", Option4));
+options.Add(new Option(5, "[5] Run table schema script. This alters the db, so be careful.", Option5) );
+options.Add(new Option(6, "[6] Generate script to populate table data. This just generates the script, and does not alter the db.", Option6));
+options.Add(new Option(7, "[7] Populate table data. This alters the db, so be careful.", Option7));
+options.Add(new Option(8, "[8] Create the schema and populate the data (5+7). This alters the db, so be careful.", Option8));
+options.Add(new Option(9, "[9] Quit", Bye));
+
 
 
 void InitialIntro()
@@ -44,59 +58,6 @@ void InitialIntro()
     Console.WriteLine("------------------------------------------------");
 
 }
-
-
-
-void PickAnOption()
-{
-    Console.WriteLine();
-    Console.WriteLine();
-    Console.WriteLine();
-    Console.WriteLine("------------------------------------------------");
-    Console.WriteLine("What would you like to do (pick and option...)");
-    Console.WriteLine("[1] Check the configured path location.");
-    Console.WriteLine("[2] See files in your configured path.");
-    Console.WriteLine("[3] Check connection string.");
-    Console.WriteLine("[4] Get the SQL script to generate tables. This just generates the script, and does not alter the db.");
-    Console.WriteLine("[5] Run table schema script. This alters the db, so be careful.");
-    Console.WriteLine("[6] Generate script to populate table data. This just generates the script, and does not alter the db.");
-    Console.WriteLine("[7] Populate table data. This alters the db, so be careful.");
-    Console.WriteLine("[8] Create the schema and populate the data (5+7). This alters the db, so be careful.");
-    Console.WriteLine("Press enter a couple of times to get out of here.");
-    Console.WriteLine(">>");
-    var option = Console.ReadKey();
-    switch (option.KeyChar)
-    {
-        case ('1'):
-            Option1();
-            break;
-        case ('2'):
-            Option2();
-            break;
-        case ('3'):
-            Option3();
-            break;
-        case ('4'):
-            Option4();
-            break;
-        case ('5'):
-            Option5();
-            break;
-        case ('6'):
-            Option6();
-            break;
-        case ('7'):
-            Option7();
-            break;
-        case ('8'):
-            Option8();
-            break;
-        default:
-            Bye();
-            break;
-    }
-}
-
 
 void Option1()
 {
@@ -260,8 +221,8 @@ void ClickToContinue()
     WriteSeparater();
     Console.WriteLine("Press enter to return to the menu.");
     Console.ReadLine();
-    Console.Clear();
-    PickAnOption();
+    WriteMenu(options[menuSelectedIndex]);
+    GetInteraction();
 }
 
 void Bye()
@@ -269,8 +230,93 @@ void Bye()
     Console.WriteLine("Bye...");
     Thread.Sleep(2000);
     Console.WriteLine("");
+    Environment.Exit(0);
 }
 
-InitialIntro();
-PickAnOption();
+
+
+
+void GetInteraction()
+{
+    ConsoleKeyInfo keyinfo;
+    do
+    {
+        keyinfo = Console.ReadKey();
+        if (keyinfo.Key == ConsoleKey.DownArrow)
+        {
+            if (menuSelectedIndex + 1 < options.Count)
+            {
+                menuSelectedIndex++;
+                WriteMenu(options[menuSelectedIndex]);
+            }
+        }
+
+        if (keyinfo.Key == ConsoleKey.UpArrow)
+        {
+            if (menuSelectedIndex - 1 >= 0)
+            {
+                menuSelectedIndex--;
+                WriteMenu(options[menuSelectedIndex]);
+            }
+        }
+
+        // Handle different action for the option
+        if (keyinfo.Key == ConsoleKey.Enter)
+        {
+            options[menuSelectedIndex].Selected.Invoke();
+            menuSelectedIndex = 0;
+        }
+
+        if (Int32.TryParse(keyinfo.KeyChar.ToString(), out var number))
+        {
+            if (options.Select(e => e.Id).Contains(number))
+            {
+                menuSelectedIndex = number-1;//0 based index
+                options.First(e => e.Id == number).Selected.Invoke();
+            }
+        }
+
+        
+    } while (keyinfo.Key != ConsoleKey.X) ;
+
+}
+
+
+
+void WriteMenu(Option selectedOption)
+{
+    Console.Clear();
+
+    if(initialLoad) InitialIntro();
+
+
+    Console.WriteLine("Please select ... ");
+
+    foreach (Option option in options)
+    {
+        if (option == selectedOption)
+        {
+            Console.Write("> ");
+        }
+        else
+        {
+            Console.Write("  ");
+        }
+
+        Console.WriteLine(option.Name);
+    }
+}
+
+
+
+
+
+WriteMenu(options[menuSelectedIndex]);
+GetInteraction();
+
+
+
+readonly record struct Option(int Id, string Name, Action Selected)
+{
+};
 

@@ -9,8 +9,6 @@ using FileReader.Core.Interfaces;
 
 namespace FileReader.Core.Services
 {
-  
-
     public class DataService : IDataService
     {
         string _constr;
@@ -96,14 +94,31 @@ namespace FileReader.Core.Services
 
         public void PopulateTable(string tableName, string sourcePath)
         {
-            var con = new SqlConnection(_constr);
+            using var con = new SqlConnection(_constr);
             con.Open();
 
             string sql = PopulateTableString(tableName, sourcePath);
 
 
             con.ExecuteScalar(sql);
+            con.Close();
+            
         }
+
+        //public IEnumerable<string> CheckIfTableExists(IEnumerable<string> tableNames)
+        //{
+        //    using var con = new SqlConnection(_constr);
+        //    var tableNamesString = string.Join(',', tableNames);
+        //    string sql = "select table_name from information_schema.tables where table_name in (@tableNames)";
+        //    var results = con.Query<string>(sql, new { tableName = tableNamesString });
+
+        //    con.Close();
+        //    con.Dispose();
+        //    return results; 
+
+        //}
+
+
 
         private string GetColumnString(Column col, bool lastColumn)
         {

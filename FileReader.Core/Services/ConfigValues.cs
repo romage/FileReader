@@ -129,6 +129,52 @@ namespace FileReader.Core.Services
             return configs;
         }
 
+       
+        public void UpdateSetting(string name, string newValue)
+        {
+            switch (name)
+            {
+                case "FolderPath":
+                    FolderPath = newValue;
+                    break;
+                case "FileFilter":
+                    FileFilter = newValue;
+                    break;
+                case "FileNameCleanerRegex":
+                    FileNameCleanerRegex = newValue;
+                    break;
+                case "SampleSize":
+                    SampleSize = int.Parse(newValue);
+                    break;
+                case "DefaultConnectionString":
+                    DefaultConnectionString = newValue;
+                    break;
+                case "DefaultSchema":
+                    DefaultSchema = newValue;
+                    break;
+                case "SqlPreface":
+                    SqlPreface = newValue;
+                    break;
+                case "StringLengthPaddingMultiplyer":
+                    StringLengthPaddingMultiplyer = decimal.Parse(newValue);
+                    break;
+                case "Codepage":
+                    Codepage = newValue;
+                    break;
+                case "DataFileType":
+                    DataFileType = newValue;
+                    break;
+                case "FieldTerminator":
+                    FieldTerminator = newValue;
+                    break;
+                case "RowTerminator":
+                    RowTerminator = newValue;
+                    break;
+
+            }
+            
+            var fn = getFileName(ProfileName);
+            File.WriteAllText(fn, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
     }
 }
-

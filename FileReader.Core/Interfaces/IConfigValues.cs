@@ -25,6 +25,8 @@ namespace FileReader.Core.Interfaces
         void CopySettingsProfileTo(string name);
         List<string> GetProfiles();
         void LoadSettingsProfile(string name);
+        Dictionary<string, object> GetAllSettingsProfiles();
+        void UpdateSetting(string name, string newValue);
 
     }
 }

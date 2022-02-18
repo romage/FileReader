@@ -37,9 +37,12 @@ IDataService ds = host.Services.GetRequiredService<IDataService>();
 //int profileMenuSelectedIndex = -1;
 int selectedMenuIndex = 0;
 bool initialLoad = true;
+int profileOptionsBaseCount = 3;
+int profileSettingsBaseCount = 1;
 
 List<Option> mainOptions = new List<Option>();
 List<Option> profileOptions = new List<Option>();
+List<Option> ProfileSettings = new List<Option>();
 
 mainOptions.Add(new Option(0, "[0] Create and use profile settings", Option0 ));
 mainOptions.Add(new Option(1, "[1] Check the configured path location", Option1));
@@ -52,11 +55,14 @@ mainOptions.Add(new Option(7, "[7] Populate table data. This alters the db, so b
 mainOptions.Add(new Option(8, "[8] Create the schema and populate the data (5+7). This alters the db, so be careful.", Option8));
 mainOptions.Add(new Option(9, "[9] Quit", Bye));
 
-profileOptions.Add(new Option(0, "[0] Back to main menu", LoadMainMenu));
+profileOptions.Add(new Option(0, "[0] Back to main menu", () => LoadMainMenu()));
 profileOptions.Add(new Option(1, "[1] Create new Profile", CreateProfile));
+profileOptions.Add(new Option(2, "[2] Settings for current Profile", () => WriteSettingsProfileMenu()));
+
+ProfileSettings.Add(new Option(0, "[0] Back to main menu", () => LoadMainMenu()));
 
 
-void InitialIntro()
+void InitialIntro(string message = "")
 {
     if (initialLoad)
     {
@@ -74,9 +80,9 @@ void InitialIntro()
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine($"loaded profile: {config.ProfileName}");
+        Console.WriteLine();
+        Console.WriteLine(message);
         Console.ResetColor();
-        Console.WriteLine();
-        Console.WriteLine();
         Console.WriteLine();
         Console.WriteLine("------------------------------------------------");
     }
@@ -104,17 +110,53 @@ void CreateProfile()
     }
 }
 
-void WriteProfileMenu()
+void WriteSettingsProfileMenu(string message = "")
 {
-    profileOptions.RemoveAll(e => e.Id >1);
-    var profiles = config.GetProfiles();
-    for (var i = 2; i < profiles.Count()+2; i++)
+    selectedMenuIndex=0;
+    var settings = config.GetAllSettingsProfiles();
+    ProfileSettings.RemoveAll(e => e.Id > (profileSettingsBaseCount-1));
+    
+
+    for (var i = profileSettingsBaseCount; i < settings.Count()+profileSettingsBaseCount; i++)
     {
-        string profileName = profiles[i-2];
-        profileOptions.Add(new Option(i, $"[{i}] load profile {profileName}", () => config.LoadSettingsProfile(name: profileName)));
+        var setting = settings.ElementAt(i-1);
+        ProfileSettings.Add(new Option(i, $"[{i}] {setting.Key.PadRight(45-setting.Key.Length)}: {setting.Value.ToString()}", () => UpdateSettingValue(setting)));
     }
-    WriteMenu(profileOptions, profileOptions[selectedMenuIndex]);
+    WriteMenu(ProfileSettings, ProfileSettings[selectedMenuIndex], message);
+    GetMainInteraction(ProfileSettings);
+}
+
+
+void UpdateSettingValue(KeyValuePair<string, object> setting)
+{
+    Console.WriteLine($"What is the new value for {setting.Key}? The current value is {setting.Value}");
+    var newVal = Console.ReadLine();
+    if (newVal!=null)// what if they want to delete this current value
+    { 
+        config.UpdateSetting(setting.Key, newVal);
+       
+    }
+    WriteSettingsProfileMenu($"{setting.Key} value has been updated.");
+
+}
+
+void WriteProfileMenu(string message = "")
+{
+    profileOptions.RemoveAll(e => e.Id > (profileOptionsBaseCount-1));
+    var profiles = config.GetProfiles();
+    for (var i = profileOptionsBaseCount; i < profiles.Count()+profileOptionsBaseCount; i++)
+    {
+        string profileName = profiles[i-profileOptionsBaseCount];
+        profileOptions.Add(new Option(i, $"[{i}] load profile {profileName}", () => LoadSettingsProfile(profileName)));
+    }
+    WriteMenu(profileOptions, profileOptions[selectedMenuIndex], message);
     GetMainInteraction(profileOptions);
+}
+
+void LoadSettingsProfile(string profileName)
+{
+    config.LoadSettingsProfile(name: profileName);
+    WriteProfileMenu("Profile loaded");
 }
 
 void Option0()
@@ -146,11 +188,13 @@ void Option2()
         Console.WriteLine("There are no files in this path that match the filters");
     }
     else
-    { 
-        Console.Write(files.ToStringTable(new[] { "File name,", "Extension", "Size", "Table name" }, f => f.Name, f=> f.Extension, f=>f.Length, f=>fs.GetTableName(f.Name)));
+    {
+        string tableString = files.ToStringTable(new[] { "File name,", "Extension", "Size", "Table name" }, f => f.Name, f => f.Extension, f => f.Length, f => fs.GetTableName(f.Name));
+        SetText(tableString);
+        Console.Write(tableString);
     }
 
-    ClickToContinue();
+    ClickToContinue("Files info copied to clipboard");
 }
 
 void Option3()
@@ -185,7 +229,7 @@ void Option4()
         Console.WriteLine( outputText);
     }
     SetText(sb.ToString());
-    ClickToContinue();
+    ClickToContinue("Script copied to clipboard");
 }
 
 
@@ -216,6 +260,7 @@ void Option6()
 {
     Console.Clear();
     var files = fs.GetFiles(config.FolderPath);
+    StringBuilder sb = new StringBuilder();
     foreach (var file in files)
     {
         var fn = file.Name;
@@ -224,10 +269,13 @@ void Option6()
         var script = ds.PopulateTableString(tn, file.FullName);
         WriteSeparater();
         Console.WriteLine($"Bulk insert script for { tn }.");
+        sb.AppendLine();
+        sb.AppendLine(script);
+
         Console.WriteLine(script);
 
     }
-    ClickToContinue();
+    ClickToContinue("Data insertion script copied to clipboard");
 }
 
 
@@ -282,12 +330,12 @@ void WriteSeparater()
     Console.WriteLine();
 }
 
-void ClickToContinue()
+void ClickToContinue(string message = "")
 {
     WriteSeparater();
     Console.WriteLine("Press enter to return to the menu.");
     Console.ReadLine();
-    WriteMenu(mainOptions, mainOptions[selectedMenuIndex]);
+    WriteMenu(mainOptions, mainOptions[selectedMenuIndex], message);
     GetMainInteraction(mainOptions);
 }
 
@@ -333,25 +381,25 @@ void GetMainInteraction(List<Option> options)
             selectedMenuIndex = 0;
         }
 
-        //if (Int32.TryParse(keyinfo.KeyChar.ToString(), out var number))
-        //{
-        //    if (options.Select(e => e.Id).Contains(number))
-        //    {
-        //        selectedMenuIndex = number-1;//0 based index
-        //        options.First(e => e.Id == number).Selected.Invoke();
-        //    }
-        //}
+        if (Int32.TryParse(keyinfo.KeyChar.ToString(), out var number))
+        {
+            if (options.Select(e => e.Id).Contains(number))
+            {
+                selectedMenuIndex = number-1;//0 based index
+                options.First(e => e.Id == number).Selected.Invoke();
+            }
+        }
 
-        
+
     } while (keyinfo.Key != ConsoleKey.X) ;
 }
 
 
 
-void WriteMenu(List<Option> options, Option selectedOption)
+void WriteMenu(List<Option> options, Option selectedOption, string message = "")
 {
     Console.Clear();
-    InitialIntro();
+    InitialIntro(message);
 
     if (initialLoad)
     { 
@@ -376,10 +424,10 @@ void WriteMenu(List<Option> options, Option selectedOption)
 }
 
 
-void LoadMainMenu()
+void LoadMainMenu(string message = "")
 {
     selectedMenuIndex = 0;
-    WriteMenu(mainOptions, mainOptions[selectedMenuIndex]);
+    WriteMenu(mainOptions, mainOptions[selectedMenuIndex], message);
     GetMainInteraction(mainOptions);
 }
 

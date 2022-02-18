@@ -94,7 +94,7 @@ namespace FileReader.Core.Services
             if (Path.HasExtension(filename))
                 tableName = Path.GetFileNameWithoutExtension(filename);
 
-            var multiFileToTableRegex = "";
+            var multiFileToTableRegex = _config.MultiFileToTableRegex;
 
             if (!string.IsNullOrWhiteSpace(multiFileToTableRegex))
             {

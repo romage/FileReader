@@ -217,11 +217,21 @@ void Option4()
     Console.Clear();
     StringBuilder sb = new StringBuilder();
     var files = fs.GetFiles(config.FolderPath);
+    List<string> tableNames = new List<string>();
+
     foreach (var file in files)
     {
         WriteSeparater();
         var fn = file.Name;
         var tn = fs.GetTableName(fn);
+        if (tableNames.Contains(tn))
+        {
+            sb.AppendLine($"There has already been a table processed for {tn}");
+            continue;
+        }
+
+        tableNames.Add(tn);
+
         var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
         if (config.SampleSize>0)
         {
@@ -244,10 +254,18 @@ void Option5()
 {
     Console.Clear();
     var files = fs.GetFiles(config.FolderPath);
+    StringBuilder sb = new StringBuilder();
+    List<string> tableNames = new List<string>();
     foreach (var file in files)
     {
         var fn = file.Name;
         var tn = fs.GetTableName(fn);
+        if (tableNames.Contains(tn))
+        {
+            sb.AppendLine($"There has already been a table processed for {tn}.");
+            continue;
+        }
+        tableNames.Add(tn);
         var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
         WriteSeparater();
         Console.WriteLine($"Filename>> { fn }");
@@ -313,14 +331,18 @@ void Option8()
     Console.Clear();
     Console.WriteLine("Creating tables and Populating data... ");
     var files = fs.GetFiles(config.FolderPath);
+    var tableNames = new List<string>();
     foreach (var file in files)
     {
         Console.WriteLine("...");
         var fn = file.Name;
         var tn = fs.GetTableName(fn);
-        var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
-
-        ds.CreateEmptyTable(tn, cols);
+        if (!tableNames.Contains(tn))
+        {
+            var cols = fs.GetColumsMetaData(file.FullName, config.SampleSize);
+            ds.CreateEmptyTable(tn, cols);
+        }
+        tableNames.Add(tn);
         ds.PopulateTable(tn, file.FullName);
 
         Console.WriteLine($"Bulk insert for { tn } complete.");

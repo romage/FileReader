@@ -16,7 +16,12 @@ namespace FileReader.Core.Services
 
         public  ConfigValues(IConfiguration config)
         {
-            this._config = config;
+            _config = config;
+            UpdateBase(config);
+        }
+
+        public void UpdateBase(IConfiguration config)
+        {
             ProfileName = _config.GetValue<string>("ProfileName");
             FolderPath = _config.GetValue<string>("FolderPath");
             FileFilter = _config.GetValue<string>("FileFilter");
@@ -31,7 +36,7 @@ namespace FileReader.Core.Services
             FieldTerminator = _config.GetSection("BulkInsertOptions").GetValue<string>("FieldTerminator");
             RowTerminator = _config.GetSection("BulkInsertOptions").GetValue<string>("RowTerminator");
         }
-        
+
         public ConfigValues()
         { }
 
@@ -76,6 +81,11 @@ namespace FileReader.Core.Services
             { 
                 UpdateValues(tmp);
             }
+        }
+
+        public void LoadDefaultConfig(IConfiguration baseconfig)
+        {
+            UpdateBase(baseconfig);
         }
         public void CopySettingsProfileTo(string name)
         {

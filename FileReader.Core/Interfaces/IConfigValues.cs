@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace FileReader.Core.Interfaces
         void LoadSettingsProfile(string name);
         Dictionary<string, object> GetAllSettingsProfiles();
         void UpdateSetting(string name, string newValue);
+        void LoadDefaultConfig(IConfiguration baseconfig);
 
     }
 }

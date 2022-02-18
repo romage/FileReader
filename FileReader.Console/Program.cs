@@ -37,7 +37,7 @@ IDataService ds = host.Services.GetRequiredService<IDataService>();
 //int profileMenuSelectedIndex = -1;
 int selectedMenuIndex = 0;
 bool initialLoad = true;
-int profileOptionsBaseCount = 3;
+int profileOptionsBaseCount = 4;
 int profileSettingsBaseCount = 1;
 
 List<Option> mainOptions = new List<Option>();
@@ -58,6 +58,7 @@ mainOptions.Add(new Option(9, "[9] Quit", Bye));
 profileOptions.Add(new Option(0, "[0] Back to main menu", () => LoadMainMenu()));
 profileOptions.Add(new Option(1, "[1] Create new Profile", CreateProfile));
 profileOptions.Add(new Option(2, "[2] Settings for current Profile", () => WriteSettingsProfileMenu()));
+profileOptions.Add(new Option(2, "[3] Load Default Profile", LoadDefaultProfile));
 
 ProfileSettings.Add(new Option(0, "[0] Back to main menu", () => LoadMainMenu()));
 
@@ -87,6 +88,12 @@ void InitialIntro(string message = "")
         Console.WriteLine("------------------------------------------------");
     }
 
+}
+
+void LoadDefaultProfile()
+{
+    config.LoadDefaultConfig(baseConfig);
+    WriteProfileMenu();
 }
 
 void CreateProfile()

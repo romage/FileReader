@@ -22,6 +22,7 @@ namespace FileReader.Core.Interfaces
         string DataFileType {  get; set; }
         string FieldTerminator {  get; set; }
         string RowTerminator {  get; set; }
+        string MultiFileToTableRegex { get; set; }
 
         void CopySettingsProfileTo(string name);
         List<string> GetProfiles();

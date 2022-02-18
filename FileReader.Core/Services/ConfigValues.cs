@@ -1,11 +1,5 @@
 ﻿using FileReader.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using Newtonsoft.Json;
 
 namespace FileReader.Core.Services
@@ -35,6 +29,7 @@ namespace FileReader.Core.Services
             DataFileType  = _config.GetSection("BulkInsertOptions").GetValue<string>("DataFileType");
             FieldTerminator = _config.GetSection("BulkInsertOptions").GetValue<string>("FieldTerminator");
             RowTerminator = _config.GetSection("BulkInsertOptions").GetValue<string>("RowTerminator");
+            MultiFileToTableRegex = _config.GetValue<string>("MultiFileToTableRegex");
         }
 
         public ConfigValues()
@@ -55,6 +50,7 @@ namespace FileReader.Core.Services
             this.DataFileType = values.DataFileType;
             this.FieldTerminator = values.FieldTerminator;
             this.RowTerminator = values.RowTerminator;
+            this.MultiFileToTableRegex = values.MultiFileToTableRegex;
         }
 
         public string ProfileName { get; set; }
@@ -70,6 +66,7 @@ namespace FileReader.Core.Services
         public string DataFileType { get; set; }
         public string FieldTerminator { get; set; }
         public string RowTerminator { get; set; }
+        public string MultiFileToTableRegex { get; set; }
 
         public void LoadSettingsProfile(string name)
         {
@@ -135,6 +132,7 @@ namespace FileReader.Core.Services
             configs.Add("DataFileType", DataFileType);
             configs.Add("FieldTerminator", FieldTerminator);
             configs.Add("RowTerminator", RowTerminator);
+            configs.Add("MultiFileToTableRegex", MultiFileToTableRegex);
 
             return configs;
         }
@@ -179,6 +177,9 @@ namespace FileReader.Core.Services
                     break;
                 case "RowTerminator":
                     RowTerminator = newValue;
+                    break;
+                case "MultiFileToTableRegex":
+                    MultiFileToTableRegex = newValue;
                     break;
 
             }

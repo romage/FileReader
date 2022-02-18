@@ -1,14 +1,8 @@
 ﻿using FileReader.Core.Enums;
 using FileReader.Core.Interfaces;
 using FileReader.Core.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FileReader.Core.Services
 {
@@ -96,18 +90,26 @@ namespace FileReader.Core.Services
 
         public string GetTableName(string filename)
         {
-
+            string tableName="";
             if (Path.HasExtension(filename))
-                filename = Path.GetFileNameWithoutExtension(filename);
+                tableName = Path.GetFileNameWithoutExtension(filename);
+
+            var multiFileToTableRegex = "";
+
+            if (!string.IsNullOrWhiteSpace(multiFileToTableRegex))
+            {
+                var re = new Regex(multiFileToTableRegex);
+                tableName = re.Replace(tableName, "");
+            }
 
             var cleanerExpression = _config.FileNameCleanerRegex;
 
             if (!string.IsNullOrWhiteSpace(cleanerExpression))
             {
                 var re = new Regex(cleanerExpression);
-                filename = re.Replace(filename, "");
+                tableName = re.Replace(tableName, "");
             }
-            return filename;
+            return tableName;
         }
     }
 }

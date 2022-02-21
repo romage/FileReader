@@ -2,7 +2,6 @@
 using System.Text;
 using System.Data.SqlClient;
 using Dapper;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using FileReader.Core.Models;
 using FileReader.Core.Interfaces;
@@ -11,7 +10,6 @@ namespace FileReader.Core.Services
 {
     public class DataService : IDataService
     {
-        string _constr;
         private readonly ILogger<DataService> _logger;
         private readonly IConfigValues _config;
         private readonly ITypeProcessingService _typeProcessingService;
@@ -19,7 +17,6 @@ namespace FileReader.Core.Services
         public DataService(ITypeProcessingService typeProcessingService, IConfigValues config, ILogger<DataService> logger)
         {
             _config = config;
-            _constr = config.DefaultConnectionString;
             _logger = logger;
             _typeProcessingService = typeProcessingService;
 
@@ -66,12 +63,14 @@ namespace FileReader.Core.Services
 
         public void CreateEmptyTable(string tableName, List<Column> columns)
         {
-            var con = new SqlConnection(_constr);
+            var con = new SqlConnection(_config.DefaultConnectionString);
             con.Open();
 
             string sql = CreateEmptyTableText(tableName, columns);
 
             con.ExecuteScalar(sql);
+            con.Close();
+            con.Dispose();
 
         }
 
@@ -94,7 +93,7 @@ namespace FileReader.Core.Services
 
         public void PopulateTable(string tableName, string sourcePath)
         {
-            using var con = new SqlConnection(_constr);
+            using var con = new SqlConnection(_config.DefaultConnectionString);
             con.Open();
 
             string sql = PopulateTableString(tableName, sourcePath);
@@ -102,6 +101,7 @@ namespace FileReader.Core.Services
 
             con.ExecuteScalar(sql);
             con.Close();
+            con.Dispose();
             
         }
 
@@ -124,7 +124,7 @@ namespace FileReader.Core.Services
         {
             string nullable = col.IsNullable ? "NULL" : "NOT NULL";
             string strlen = col.MaxLength > 255 ? "max" : col.MaxLength.ToString();
-            string sqlDataType = string.Empty;
+            string sqlDataType;
             switch (col.HeadingDataType)
             {
                 case HeadingDataType.Bool:

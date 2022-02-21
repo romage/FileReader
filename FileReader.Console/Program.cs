@@ -44,7 +44,7 @@ List<Option> mainOptions = new List<Option>();
 List<Option> profileOptions = new List<Option>();
 List<Option> ProfileSettings = new List<Option>();
 
-mainOptions.Add(new Option(0, "[0] Create and use profile settings", Option0 ));
+mainOptions.Add(new Option(0, "[0] Create and use profile settings (currently disable)", Option0 ));
 mainOptions.Add(new Option(1, "[1] Check the configured path location", Option1));
 mainOptions.Add(new Option(2, "[2] See files in your configured path.", Option2));
 mainOptions.Add(new Option(3, "[3] Check connection string.", Option3));
@@ -107,7 +107,7 @@ void CreateProfile()
         Console.WriteLine("You need to enter the name for a new profile. try again.... ");
         Thread.Sleep(2000);
         CreateProfile();
-    }
+ }
     else
     {
         config.CopySettingsProfileTo(newProfileName);
@@ -168,8 +168,12 @@ void LoadSettingsProfile(string profileName)
 
 void Option0()
 {
-    selectedMenuIndex = 0;
-    WriteProfileMenu();
+    // disabled until fix can be found to correctly inject new seetings. 
+    // DependencyInjection not updating settings
+    Console.WriteLine("Currently disabled");
+    //selectedMenuIndex = 0;
+    //WriteProfileMenu();
+    ClickToContinue();
 }
 
 void Option1()
